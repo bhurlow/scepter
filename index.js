@@ -7,15 +7,17 @@ var url = require('url')
 var _ = require('lodash')
 var spawn = require('child_process').spawn
 var docker = new Docker({socketPath: '/var/run/docker.sock'})
+var debug = require('debug')
+var info = debug('scepter:info')
 
 var logfiles = {}
+var streams = []
 
 // if a conatiner is created or dies
 Object.observe(logfiles, onFileChange)
 
 function onFileChange(changes) {
   console.log('STATE CHANGE')
-  // console.log(changes)
 }
 
 function tail(path) {
@@ -29,17 +31,20 @@ function isStdout(obj) {
 }
 
 function notify(event) {
-  console.log('I would notify!')
-  console.log(event)
+  // console.log('I would notify!')
+  // console.log(event.id)
+  // console.log(event)
+  info(event)
 }
 
 function handleLogFile(id, name, logpath) {
-  console.log('handling', id)
-  tail(logpath)
+  info('streaming stderr for', name)
+  let stream = tail(logpath)
     .pipe(es.split())
     .pipe(es.parse())
     .pipe(es.map((x, cb) => {
       x.name = name
+      x.id = id
       cb(null, x)
     }))
     .pipe(es.map((data, cb) => {
@@ -48,7 +53,8 @@ function handleLogFile(id, name, logpath) {
       }
       else cb()
     }))
-    .on('data', notify)
+    streams.push(stream)
+    stream.on('data', notify)
 }
 
 // avoid an infinite logging loop
@@ -62,7 +68,7 @@ function filterContainers(containers) {
 // (this might change throughout container lifecycle)
 //
 // TODO: this must ignore logs from self!
-function setInitialLogPaths() {
+function streamLogs() {
   docker.listContainers(function(err, res) {
     if (err) throw err;
     filterContainers(res).forEach((info) => {
@@ -78,20 +84,50 @@ function setInitialLogPaths() {
   })
 }
 
-function handleNewContainer(contianer) {
-  console.log('NEW CONTAINER')
-  console.log(contianer)
+function cleanup() {
+  info('cleaning streams....')
+  streams.map(x => x.destroy())
+  info('streams all closed')
+  streams = []
+  info('resetting stream targets')
+  streamLogs()
 }
 
-function handleContainerDie(contianer) {
-  console.log('CONTIANER DIE')
-  console.log(contianer)
+function handleNewContainer(id) {
+  info('new container detected', id)
+  cleanup()
 }
 
-function watchLog(container) {
-
+function handleContainerDie(id) {
+  info('container die event detected', id)
+  cleanup()
 }
 
-setInitialLogPaths()
+function watchDockerEvents() {
+  docker.getEvents(function(err, stream) {
+    stream.on('data', function(chunk) {
+      let event = JSON.parse(chunk.toString())
+      let type = event.Type
+      let status = event.status
+      let id = event.Actor.ID
+      if (!id) return console.log('no id in event')
+      switch (status) {
+        case 'die':
+          handleContainerDie(id)
+          break;
+        case 'start':
+          handleNewContainer(id)
+          break;
+      }
+    })
+  })
+}
+
+function init() {
+  info('Hi! getting started')
+  streamLogs()
+  watchDockerEvents()
+}
+init()
 
 
