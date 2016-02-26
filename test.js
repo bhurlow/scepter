@@ -17,31 +17,33 @@ var docker = new Docker({
   key: fs.readFileSync(machinePath + 'key.pem')
 });
 
-const cmd = '/bin/bash -c while true; do  echo \"YO\"; sleep 1; done'
+docker.getEvents(function(err, stream) {
+  stream.on('data', function(chunk) {
+    let event = JSON.parse(chunk.toString())
+    console.log(event.id, event.status)
+  })
+})
 
-docker.createContainer({Image: 'ubuntu', Cmd: ["echo", "POOP"], name: 'yolo'}, function (err, container) {
+// const cmd = 'bash -c while true; do  echo \"YO\"; sleep 1; done'
+// const cmd = '/bin/bash -c "echo yooooooo"'
+const cmd = 'while true; do echo `date` >&2; sleep 1; done'
+
+docker.createContainer({Image: 'ubuntu', Cmd: ["/bin/bash", "-c", cmd], name: 'yolo'}, function (err, container) {
   if (err) throw err;
 
-  container.attach({stream: true, stdout: true, stderr: true}, function (err, stream) {
-    //dockerode may demultiplex attach streams for you :)
-    // container.modem.demuxStream(stream, process.stdout, process.stderr);
-    // console.log(stream)
-    stream.on('data', function(chunk) {
-      console.log(chunk.toString())
-    })
-  });
+  container.start(function(err, data) {
+    console.log(data)
 
+    container.attach({stream: true, stdout: false, stderr: true}, function (err, stream) {
+      stream.on('data', function(chunk) {
+        console.log(chunk.toString())
+      })
+    });
 
-  // let container = docker.getContainer(res["id"])
-  // console.log(container)
-  // console.log(JSON.parse(res))
-  // let c = docker.getContainer(container.id);
-  // console.log(c)
-  // container.start(function (err, data) {
-  //   console.log(err)
-  //     console.log(data)
-  // });
+  })
+
 });
+
 
 // test('timing test', function (t) {
 //     t.plan(2);

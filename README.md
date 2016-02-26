@@ -6,7 +6,7 @@ quick and dirty docker exception tracker
 ```
 docker run \
   -d \
-  -e MAILGUN_TOKEN="xxxx" \
+  -v /var/run/docker.sock:/var/run/docker.sock \
   bhurlow/scepter
 ```
 
