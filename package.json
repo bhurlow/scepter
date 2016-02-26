@@ -1,0 +1,32 @@
+{
+  "name": "scepter",
+  "version": "0.0.1",
+  "description": "store and alert stderr events from your docker containers",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bhurlow/scepter.git"
+  },
+  "keywords": [
+    "docker",
+    "logs",
+    "error",
+    "tracking"
+  ],
+  "author": "Brian Hurlow",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bhurlow/scepter/issues"
+  },
+  "homepage": "https://github.com/bhurlow/scepter#readme",
+  "dependencies": {
+    "debug": "^2.2.0",
+    "dockerode": "^2.2.9"
+  },
+  "devDependencies": {
+    "tape": "^4.4.0"
+  }
+}
