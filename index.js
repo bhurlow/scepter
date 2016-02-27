@@ -129,13 +129,21 @@ function watchDockerEvents() {
 }
 
 function ensureVars() {
+
+
   // make this loop over an array
-  // ensure these
+  let key = process.env.MAILGUN_API_KEY
+  let domain = process.env.MAILGUN_DOMAIN
+  let mail_to = process.env.MAIL_TO
+
+  info(key)
+  info(domain)
+  info(mail_to)
+
   if (!process.env.MAILGUN_API_KEY ||
       !process.env.MAILGUN_DOMAIN ||
       !process.env.MAIL_TO) {
-    console.log('yoooo')
-    throw new Error('must supply env vars: MAILGUN_API_KEY, MAILGUN_DOMAIN, MAIL_TO)
+    throw new Error('must supply env vars: MAILGUN_API_KEY, MAILGUN_DOMAIN, MAIL_TO')
   }
 }
 
