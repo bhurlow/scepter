@@ -1,5 +1,8 @@
 # scepter
-quick and dirty docker exception tracker
+
+docker exception handling
+
+<img src="/test/scepter.jpg" align="left" height="210px" hspace="5px"/>
 
 ### usage
 
