@@ -15,15 +15,12 @@ var fmt = require('./lib/fmt')
 var logfiles = {}
 var streams = []
 
-// mail config 
-
-
 // if a conatiner is created or dies
-Object.observe(logfiles, onFileChange)
+// Object.observe(logfiles, onFileChange)
 
-function onFileChange(changes) {
-  console.log('STATE CHANGE')
-}
+// function onFileChange(changes) {
+//   console.log('STATE CHANGE')
+// }
 
 function tail(path) {
   let s = spawn('tail',['-n', '10', '-f', path]);
@@ -132,14 +129,19 @@ function watchDockerEvents() {
 }
 
 function ensureVars() {
+  // make this loop over an array
   // ensure these
-  // MAILGUN_API_KEY
-  // MAILGUN_DOMAIN
-  // MAIL_TO
+  if (!process.env.MAILGUN_API_KEY ||
+      !process.env.MAILGUN_DOMAIN ||
+      !process.env.MAIL_TO) {
+    console.log('yoooo')
+    throw new Error('must supply env vars: MAILGUN_API_KEY, MAILGUN_DOMAIN, MAIL_TO)
+  }
 }
 
 function init() {
   info('Hi! getting started')
+  ensureVars()
   streamLogs()
   watchDockerEvents()
 }

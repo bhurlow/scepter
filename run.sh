@@ -1,7 +1,5 @@
 #! /bin/bash
 
-# docker rm -f scepter
-
 docker build -t bhurlow/scepter .
 
 docker run \
