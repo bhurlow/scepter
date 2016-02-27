@@ -10,10 +10,11 @@ var docker = new Docker({socketPath: '/var/run/docker.sock'})
 var debug = require('debug')
 var info = debug('scepter:info')
 var mail = require('./lib/mail')
-var fmt = require('./lib/fmt')
+var slack = require('./lib/slack')
 
 var logfiles = {}
 var streams = []
+var notifyFn = function() {}
 
 // if a conatiner is created or dies
 // Object.observe(logfiles, onFileChange)
@@ -34,12 +35,7 @@ function isStdout(obj) {
 
 function notify(event) {
   info(event.name, event.log)
-  mail({
-    from: 'Exception Tracker <ops@scepter.com>',
-    to: process.env.MAIL_TO,
-    subject: 'Exception',
-    text: fmt(event)
-  })
+  notifyFn(event)
 }
 
 function handleLogFile(id, name, logpath) {
@@ -135,16 +131,24 @@ function ensureVars() {
   let key = process.env.MAILGUN_API_KEY
   let domain = process.env.MAILGUN_DOMAIN
   let mail_to = process.env.MAIL_TO
+  let slack_token = process.env.SLACK_TOKEN
 
   info(key)
   info(domain)
   info(mail_to)
 
-  if (!process.env.MAILGUN_API_KEY ||
-      !process.env.MAILGUN_DOMAIN ||
-      !process.env.MAIL_TO) {
-    throw new Error('must supply env vars: MAILGUN_API_KEY, MAILGUN_DOMAIN, MAIL_TO')
+  if (slack_token) {
+    notifyFn = slack
   }
+  else {
+    if (!process.env.MAILGUN_API_KEY ||
+        !process.env.MAILGUN_DOMAIN ||
+        !process.env.MAIL_TO) {
+      throw new Error('must supply env vars: MAILGUN_API_KEY, MAILGUN_DOMAIN, MAIL_TO')
+    }
+    notifyFn = mail
+  }
+
 }
 
 function init() {
