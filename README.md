@@ -1,8 +1,8 @@
 # scepter
 
-docker exception handling
+docker exception notifyer thing
 
-<img src="/test/scepter.jpg" align="left" height="210px" hspace="5px"/>
+<img src="/test/scepter.jpg" align="center" height="210px"/>
 
 ### usage
 
