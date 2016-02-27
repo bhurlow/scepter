@@ -9,9 +9,14 @@ var spawn = require('child_process').spawn
 var docker = new Docker({socketPath: '/var/run/docker.sock'})
 var debug = require('debug')
 var info = debug('scepter:info')
+var mail = require('./lib/mail')
+var fmt = require('./lib/fmt')
 
 var logfiles = {}
 var streams = []
+
+// mail config 
+
 
 // if a conatiner is created or dies
 Object.observe(logfiles, onFileChange)
@@ -31,10 +36,13 @@ function isStdout(obj) {
 }
 
 function notify(event) {
-  // console.log('I would notify!')
-  // console.log(event.id)
-  // console.log(event)
-  info(event)
+  info(event.name, event.log)
+  mail({
+    from: 'Exception Tracker <ops@scepter.com>',
+    to: process.env.MAIL_TO,
+    subject: 'Exception',
+    text: fmt(event)
+  })
 }
 
 function handleLogFile(id, name, logpath) {
@@ -121,6 +129,13 @@ function watchDockerEvents() {
       }
     })
   })
+}
+
+function ensureVars() {
+  // ensure these
+  // MAILGUN_API_KEY
+  // MAILGUN_DOMAIN
+  // MAIL_TO
 }
 
 function init() {
